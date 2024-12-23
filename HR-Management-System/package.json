@@ -1,0 +1,17 @@
+{
+  "name": "hr-management-system",
+  "version": "1.0.0",
+  "description": "Hr management Microservice as the part of IES",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "type": "module",
+  "author": "Rahul Parihar",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mongoose": "^8.9.2"
+  }
+}
