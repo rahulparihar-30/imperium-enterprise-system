@@ -1,5 +1,5 @@
 import express from 'express';
-import {Job} from "../schemas.js";
+import Job from '../schemas/jobSchema.js';
 import mongoose from "mongoose";
 const jobRouter = express.Router();
 const checkId = (id) => !mongoose.Types.ObjectId.isValid(id);

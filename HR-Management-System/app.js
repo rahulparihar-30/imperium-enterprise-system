@@ -5,6 +5,7 @@ import appRouter from "./routes/applications.js";
 import jobRouter from "./routes/jobs.js";
 import employeesRouter from "./routes/employees.js";
 import attendanceRouter from "./routes/attendance.js";
+import scheduleRouter from "./routes/scheduling.js";
 dotenv.config();
 const app = express();
 const PORT = 3000;
@@ -29,6 +30,7 @@ app.use("/hr/application", appRouter);
 app.use("/hr/jobs", jobRouter);
 app.use("/hr/employees", employeesRouter);
 app.use("/hr/attendance", attendanceRouter);
+app.use("/hr/schedule", scheduleRouter);
 app.listen(PORT, () => {
   console.log(
     "HR Management Microservice Started Successfully and listening on port " +

@@ -1,5 +1,5 @@
 import express from "express";
-import { Application } from "../schemas.js";
+import Application from "../schemas/applicationSchema.js";
 import mongoose from "mongoose";
 const appRouter = express.Router();
 

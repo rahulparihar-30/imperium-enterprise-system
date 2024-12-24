@@ -1,6 +1,6 @@
 import express from "express";
 import mongoose from "mongoose";
-import { Employee } from "../schemas.js";
+import Employee  from "../schemas/emplyeeSchema.js";
 
 const employeesRouter = express.Router();
 
