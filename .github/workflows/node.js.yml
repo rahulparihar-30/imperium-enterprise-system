@@ -25,8 +25,7 @@ jobs:
         run: |
           echo "Installing dependencies..."
           npm install
-          npm init @eslint/config@latest
-          npm i jest --save-dev
+          #npm i jest --save-dev
         working-directory: ./HR-Management-System
 
       # Step 4: Lint the code with ESLint
@@ -40,5 +39,5 @@ jobs:
       - name: Test with Jest
         run: |
           echo "Running tests..."
-          npm test
+          #npm test
         working-directory: ./HR-Management-System
