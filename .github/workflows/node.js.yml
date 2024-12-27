@@ -23,20 +23,21 @@ jobs:
       # Step 3: Install dependencies
       - name: Install dependencies
         run: |
-          echo "Moving to the project directory..."
-          cd /HR-Managment-System
           echo "Installing dependencies..."
           npm install
           npm i eslint jest --save-dev
+        working-directory: ./HR-Management-System
 
       # Step 4: Lint the code with ESLint
       - name: Lint with ESLint
         run: |
           echo "Linting code..."
           npx eslint . --fix
+        working-directory: ./HR-Management-System
 
       # Step 5: Run Jest tests
       - name: Test with Jest
         run: |
           echo "Running tests..."
           npm test
+        working-directory: ./HR-Management-System
