@@ -14,6 +14,28 @@ scheduleRouter.get('/', async (req, res) => {
 });
 scheduleRouter.post('/create', async (req, res) => {
     try {
+        const { platform} = req.query;
+        const eventDetails = req.body;
+        if (!platform) {
+            return res.status(400).json({ message: 'Platform is required' });
+        }
+
+        if (platform === 'zoom') {
+            const { meetingId, meetingPassword } = req.body;
+            if (!meetingId || !meetingPassword) {
+                return res.status(400).json({ message: 'Meeting ID and password are required' });
+            }
+        }else if (platform === 'googleMeet') {
+            const { meetingLink } = req.body;
+            if (!meetingLink) {
+                return res.status(400).json({ message: 'Meeting link is required' });
+            }
+        }else if (platform === 'microsoftTeams') {
+            const { meetingLink } = req.body;
+            if (!meetingLink) {
+                return res.status(400).json({ message: 'Meeting link is required' });
+            }
+        }
         const newSchedule = new Schedule(req.body);
         const savedSchedule = await newSchedule.save();
         res.status(201).json(savedSchedule);
