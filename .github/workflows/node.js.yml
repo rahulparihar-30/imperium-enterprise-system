@@ -23,6 +23,9 @@ jobs:
       # Step 3: Install dependencies
       - name: Install dependencies
         run: |
+          echo "Moving to the project directory..."
+          cd HR-Managment-System
+          echo "Installing dependencies..."
           npm install
           npm i eslint jest --save-dev
 
