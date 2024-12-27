@@ -25,7 +25,8 @@ jobs:
         run: |
           echo "Installing dependencies..."
           npm install
-          npm i eslint jest --save-dev
+          npm init @eslint/config@latest
+          npm i jest --save-dev
         working-directory: ./HR-Management-System
 
       # Step 4: Lint the code with ESLint
