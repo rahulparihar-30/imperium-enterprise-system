@@ -3,16 +3,28 @@ import Job from '../schemas/jobSchema.js';
 import mongoose from "mongoose";
 const jobRouter = express.Router();
 const checkId = (id) => !mongoose.Types.ObjectId.isValid(id);
+
 jobRouter.get("/", async (req, res) => {
+  const { page = 1, limit = 10 } = req.query;
   try {
-    const jobs = await Job.find();
+    const jobs = await Job.find()
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
+
+    const totalJobs = await Job.countDocuments();
 
     if (jobs.length === 0) {
-      res.status(404).json({
-        message: "No jobs Found",
+      return res.status(404).json({
+        message: "No jobs found",
       });
     }
-    res.status(200).json(jobs);
+
+    res.status(200).json({
+      totalJobs,
+      totalPages: Math.ceil(totalJobs / limit),
+      currentPage: parseInt(page),
+      jobs,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -21,6 +33,7 @@ jobRouter.get("/", async (req, res) => {
     });
   }
 });
+
 jobRouter.post("/new", async (req, res) => {
   try {
     const {

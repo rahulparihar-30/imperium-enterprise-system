@@ -124,6 +124,7 @@ employeesRouter.post("/add", async (req, res) => {
     });
   }
 });
+
 employeesRouter.put("/update", async (req, res) => {
   const { id } = req.query;
   const updatedData = req.body;
@@ -160,8 +161,14 @@ employeesRouter.put("/update", async (req, res) => {
   }
 });
 employeesRouter.get("/", async (req, res) => {
+  const { page = 1, limit = 10 } = req.query;
+
   try {
-    const employees = await Employee.find();
+    const employees = await Employee.find()
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
+
+    const totalEmployees = await Employee.countDocuments();
 
     if (!employees || employees.length === 0) {
       return res.status(404).json({ message: "No employees found." });
@@ -170,6 +177,8 @@ employeesRouter.get("/", async (req, res) => {
     res.status(200).json({
       message: "Employees fetched successfully.",
       employees,
+      totalPages: Math.ceil(totalEmployees / limit),
+      currentPage: parseInt(page),
     });
   } catch (error) {
     console.error("Error while fetching employees:", error);

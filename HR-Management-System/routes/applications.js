@@ -14,9 +14,19 @@ const deleteRejectedApplications = async () => {
     console.error("Error while deleting rejected applications", error);
   }
 };
+
 appRouter.get("/", async (req, res) => {
+  const { page = 1, limit = 10 } = req.query; // Default to page 1 and limit 10
+  const skip = (page - 1) * limit;
+
   try {
-    const applications = await Application.find();
+    // Fetch applications with pagination
+    const applications = await Application.find()
+      .skip(skip)
+      .limit(Number(limit));
+
+    // Count total documents for metadata
+    const totalApplications = await Application.countDocuments();
 
     if (!applications || applications.length === 0) {
       return res.status(404).json({ message: "No applications found." });
@@ -24,6 +34,12 @@ appRouter.get("/", async (req, res) => {
 
     res.status(200).json({
       message: "Applications fetched successfully.",
+      metadata: {
+        total: totalApplications,
+        page: Number(page),
+        limit: Number(limit),
+        totalPages: Math.ceil(totalApplications / limit),
+      },
       applications,
     });
   } catch (error) {
@@ -34,6 +50,7 @@ appRouter.get("/", async (req, res) => {
     });
   }
 });
+
 appRouter.post("/", async (req, res) => {
   try {
     // Destructure fields from request body

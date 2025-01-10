@@ -48,22 +48,28 @@ attendanceRouter.post("/mark", async (req, res) => {
 
 attendanceRouter.get("/", async (req, res) => {
   try {
-    const attendance = await Attendance.find();
+    const { page = 1, limit = 10 } = req.query;
+    const skip = (page - 1) * limit;
+
+    const attendance = await Attendance.find().skip(skip).limit(Number(limit));
 
     if (!attendance || attendance.length === 0) {
       return res.status(404).json({ message: "No attendance records found." });
     }
 
-    if (attendance.length === 0) {
-      return res.status(404).json({
-        message: "No attendance records match the provided filters.",
-      });
-    } else {
-      res.status(200).json({
-        message: "Attendance records fetched successfully.",
-        data: attendance,
-      });
-    }
+    const totalRecords = await Attendance.countDocuments();
+    const totalPages = Math.ceil(totalRecords / limit);
+
+    res.status(200).json({
+      message: "Attendance records fetched successfully.",
+      data: attendance,
+      pagination: {
+        totalRecords,
+        totalPages,
+        currentPage: Number(page),
+        pageSize: Number(limit),
+      },
+    });
   } catch (error) {
     console.error("Error while fetching attendance records:", error);
     res.status(500).json({
