@@ -75,7 +75,7 @@ appRouter.post("/", async (req, res) => {
     if (checkId(jobId)) {
       return res.status(400).json({
         message: "Invalid job ID format",
-        id: id,
+        id: jobId,
       });
     }
     // Validate required fields

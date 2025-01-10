@@ -1,7 +1,7 @@
 import express from "express";
 import mongoose from "mongoose";
 import Attendance from "../schemas/attendanceSchema.js";
-
+import Employee from "../schemas/emplyeeSchema.js";
 const attendanceRouter = express.Router();
 const checkId = (id) => !mongoose.Types.ObjectId.isValid(id);
 

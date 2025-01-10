@@ -16,11 +16,6 @@ const scheduleSchema = new Schema(
     meetingLink: {
       type: String,
       required: [true, "Meeting link is required"],
-      validate: {
-        validator: (v) =>
-          /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([\/\w .-]*)*\/?$/.test(v),
-        message: "Invalid meeting link URL",
-      },
     },
     interviewer: {
       type: Schema.Types.ObjectId,
