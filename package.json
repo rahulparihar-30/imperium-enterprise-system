@@ -10,7 +10,7 @@
   "author": "Rahul Parihar",
   "license": "MIT",
   "dependencies": {
-    "@eslint/js": "^9.17.0",
+    "@eslint/js": "^9.18.0",
     "@google-apps/meet": "^0.3.0",
     "@google-cloud/local-auth": "^2.1.0",
     "axios": "^1.7.9",
