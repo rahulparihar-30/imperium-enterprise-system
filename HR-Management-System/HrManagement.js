@@ -4,6 +4,7 @@ import jobRouter from "./routes/jobs.js";
 import employeesRouter from "./routes/employees.js";
 import attendanceRouter from "./routes/attendance.js";
 import scheduleRouter from "./routes/scheduling.js";
+import performanceRouter from "./routes/performance.js";
 
 const HrManagementRouter = Router();
 
@@ -17,6 +18,7 @@ HrManagementRouter.use("/jobs", jobRouter);
 HrManagementRouter.use("/employees", employeesRouter);
 HrManagementRouter.use("/attendance", attendanceRouter);
 HrManagementRouter.use("/schedule", scheduleRouter);
+HrManagementRouter.use("/performance",performanceRouter);
 
 
 export default HrManagementRouter;

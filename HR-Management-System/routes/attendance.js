@@ -79,8 +79,8 @@ attendanceRouter.get("/", async (req, res) => {
   }
 });
 
-attendanceRouter.get("/attendance/:id", async (req, res) => {
-  const { id } = req.params;
+attendanceRouter.get("/attendance", async (req, res) => {
+  const { id } = req.query;
   if (checkId(id)) {
     return res.status(400).json({
       message: "Invalid attendance ID format",
@@ -146,7 +146,7 @@ attendanceRouter.put("/update", async (req, res) => {
   }
 });
 
-attendanceRouter.get("filter", async (req, res) => {
+attendanceRouter.get("/filter", async (req, res) => {
   try {
     const filter = {};
 

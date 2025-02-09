@@ -2,7 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 
-import HrManagementRouter from "./HR-Management-System/hrManagement.js"
+import HrManagementRouter from "./HR-Management-System/HrManagement.js"
 
 dotenv.config();
 const app = express();

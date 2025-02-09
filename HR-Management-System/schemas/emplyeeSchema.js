@@ -90,7 +90,9 @@ const employeeSchema = new mongoose.Schema(
     contractDetails: { type: String },
     visaOrWorkPermit: { type: String },
     backgroundVerification: { type: Boolean, default: false },
-
+    performance:[{
+      type: mongoose.Schema.Types.ObjectId,ref:"Performance"
+    }],
     // Document Management
     officialEmail: { type: String },
     documents: [
