@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 
 import HrManagementRouter from "./HR-Management-System/HrManagement.js"
+import TechManagementRouter from "./Tech-Management-System/TechManagementSystem.js";
+import campaignRouter from "./Marketing-Media-Management/routes/campaignRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -12,10 +14,7 @@ app.use(express.json());
 const dbURI = process.env.DATABASE_URI;
 
 mongoose
-  .connect(dbURI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect(dbURI)
   .then(() => console.log("Connected to MongoDB Atlas successfully"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
@@ -26,6 +25,8 @@ app.get("/", (req, res) => {
 });
 
 app.use("/hr",HrManagementRouter);
+app.use("/tech",TechManagementRouter);
+app.use("/marketing",campaignRouter);
 
 app.listen(PORT, () => {
   console.log(
