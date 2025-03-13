@@ -13,7 +13,7 @@
     "@eslint/js": "^9.17.0",
     "@google-apps/meet": "^0.3.0",
     "@google-cloud/local-auth": "^2.1.0",
-    "axios": "^1.7.9",
+    "axios": "^1.8.2",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "globals": "^15.14.0",
