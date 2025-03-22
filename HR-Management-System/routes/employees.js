@@ -1,11 +1,13 @@
 import express from "express";
 import mongoose from "mongoose";
-import Employee  from "../schemas/emplyeeSchema.js";
+import Employee from "../schemas/emplyeeSchema.js";
+import checkRole from "../../middleware/role.js";
 
 const employeesRouter = express.Router();
-
 const checkId = (id) => !mongoose.Types.ObjectId.isValid(id);
-employeesRouter.post("/add", async (req, res) => {
+
+// ✅ ADD EMPLOYEE (HR ONLY)
+employeesRouter.post("/add", checkRole(["HR"]), async (req, res) => {
   try {
     const {
       firstName,
@@ -27,17 +29,10 @@ employeesRouter.post("/add", async (req, res) => {
       employeeID,
       workLocation,
       dateOfExit,
-      baseSalary,
-      bonuses,
-      allowances,
-      deductions,
-      healthInsurance,
-      providentFund,
-      pan,
-      tin,
-      accountNumber,
-      bankName,
-      ifscCode,
+      salaryDetails,
+      benefits,
+      taxDetails,
+      payrollBankDetails,
       appraisals,
       skills,
       certifications,
@@ -50,21 +45,18 @@ employeesRouter.post("/add", async (req, res) => {
       officialEmail,
       documents,
       employeePhoto,
+      role,
+      payrollRecords, // Payroll IDs
+      performanceRecords, // Performance Tracking IDs
     } = req.body;
 
     const newEmployee = new Employee({
-      fullName: {
-        firstName,
-        lastName,
-      },
+      fullName: { firstName, lastName },
       dateOfBirth,
       gender,
       contactNumber,
       personalEmail,
-      address: {
-        current: currentAddress,
-        permanent: permanentAddress,
-      },
+      address: { current: currentAddress, permanent: permanentAddress },
       emergencyContact: {
         name: emergencyContactName,
         relationship: emergencyContactRelationship,
@@ -78,25 +70,10 @@ employeesRouter.post("/add", async (req, res) => {
       employeeID,
       workLocation,
       dateOfExit,
-      salaryDetails: {
-        baseSalary,
-        bonuses,
-        allowances,
-        deductions,
-      },
-      benefits: {
-        healthInsurance,
-        providentFund,
-      },
-      taxDetails: {
-        pan,
-        tin,
-      },
-      payrollBankDetails: {
-        accountNumber,
-        bankName,
-        ifscCode,
-      },
+      salaryDetails,
+      benefits,
+      taxDetails,
+      payrollBankDetails,
       appraisals,
       skills,
       certifications,
@@ -109,58 +86,40 @@ employeesRouter.post("/add", async (req, res) => {
       officialEmail,
       documents,
       employeePhoto,
+      role,
+      payrollRecords,
+      performanceRecords,
     });
 
     await newEmployee.save();
-    res.status(201).json({
-      message: "Employee added successfully.",
-      data: newEmployee,
-    });
+    res.status(201).json({ message: "Employee added successfully.", data: newEmployee });
   } catch (error) {
     console.error("Error adding employee:", error);
-    res.status(500).json({
-      message: "Error adding employee.",
-      error: error.message,
-    });
+    res.status(500).json({ message: "Error adding employee.", error: error.message });
   }
 });
 
-employeesRouter.put("/update", async (req, res) => {
+// ✅ UPDATE EMPLOYEE (HR & MANAGERS)
+employeesRouter.put("/update", checkRole(["HR", "Manager"]), async (req, res) => {
   const { id } = req.query;
   const updatedData = req.body;
-  console.log(updatedData);
   if (checkId(id)) {
-    return res.status(400).json({
-      message: "Invalid employee ID format",
-      id: id,
-    });
+    return res.status(400).json({ message: "Invalid employee ID format", id });
   }
 
   try {
-    const updatedEmployee = await Employee.findByIdAndUpdate(id, updatedData, {
-      new: true,
-      runValidators: true,
-    });
+    const updatedEmployee = await Employee.findByIdAndUpdate(id, updatedData, { new: true, runValidators: true });
+    if (!updatedEmployee) return res.status(404).json({ message: "Employee not found" });
 
-    if (!updatedEmployee) {
-      return res.status(404).json({
-        message: "Employee not found with the provided ID",
-      });
-    }
-
-    res.status(200).json({
-      message: "Employee updated successfully",
-      data: updatedEmployee,
-    });
+    res.status(200).json({ message: "Employee updated successfully", data: updatedEmployee });
   } catch (error) {
     console.error("Error updating employee:", error);
-    res.status(500).json({
-      message: "Error updating employee",
-      error: error.message,
-    });
+    res.status(500).json({ message: "Error updating employee", error: error.message });
   }
 });
-employeesRouter.get("/", async (req, res) => {
+
+// ✅ GET ALL EMPLOYEES (HR, MANAGER, LEADERSHIP)
+employeesRouter.get("/", checkRole(["HR", "Manager", "CEO", "CTO", "CFO"]), async (req, res) => {
   const { page = 1, limit = 10 } = req.query;
 
   try {
@@ -169,10 +128,7 @@ employeesRouter.get("/", async (req, res) => {
       .limit(parseInt(limit));
 
     const totalEmployees = await Employee.countDocuments();
-
-    if (!employees || employees.length === 0) {
-      return res.status(404).json({ message: "No employees found." });
-    }
+    if (!employees.length) return res.status(404).json({ message: "No employees found." });
 
     res.status(200).json({
       message: "Employees fetched successfully.",
@@ -182,63 +138,40 @@ employeesRouter.get("/", async (req, res) => {
     });
   } catch (error) {
     console.error("Error while fetching employees:", error);
-    res.status(500).json({
-      message: "Error while fetching the employees.",
-      error: error.message,
-    });
+    res.status(500).json({ message: "Error fetching employees.", error: error.message });
   }
 });
-employeesRouter.get("/emp/:id", async (req, res) => {
+
+// ✅ GET SINGLE EMPLOYEE (HR, MANAGER, LEADERSHIP)
+employeesRouter.get("/emp/:id", checkRole(["HR", "Manager", "CEO", "CTO", "CFO"]), async (req, res) => {
   const { id } = req.params;
-  if (checkId(id)) {
-    return res.status(400).json({
-      message: "Invalid employee ID format",
-      id: id,
-    });
-  }
+  if (checkId(id)) return res.status(400).json({ message: "Invalid employee ID format", id });
+
   try {
     const employee = await Employee.findById(id);
-    if (!employee) {
-      return res.status(404).json({
-        message: "Employee not found with the provided ID",
-      });
-    }
-    res.status(200).json({
-      message: "Employee fetched successfully",
-      employee: employee,
-    });
+    if (!employee) return res.status(404).json({ message: "Employee not found" });
+
+    res.status(200).json({ message: "Employee fetched successfully", employee });
   } catch (error) {
     console.error(error);
-    res.status(500).json({
-      message: "Error fetching employee",
-      error: error.message,
-    });
+    res.status(500).json({ message: "Error fetching employee", error: error.message });
   }
 });
-employeesRouter.delete("/delete", async (req, res) => {
+
+// ✅ DELETE EMPLOYEE (HR ONLY)
+employeesRouter.delete("/delete", checkRole(["HR"]), async (req, res) => {
   const { id } = req.query;
+  if (checkId(id)) return res.status(400).json({ message: "Invalid employee ID format", id });
+
   try {
-    if (checkId(id)) {
-      return res.status(400).json({
-        message: "Invalid employee ID format",
-        id: id,
-      });
-    }
-    const deleteEmployee = await Employee.deleteOne({ _id: id });
-    if (!deleteEmployee) {
-      return res.status(404).json({
-        message: "Employee not found with the provided ID",
-      });
-    }
-    res.status(200).json({
-      message: "Employee Deleted successfully",
-    });
+    const deleteEmployee = await Employee.findByIdAndDelete(id);
+    if (!deleteEmployee) return res.status(404).json({ message: "Employee not found" });
+
+    res.status(200).json({ message: "Employee deleted successfully" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({
-      message: "Error Deleting employee",
-      error: error.message,
-    });
+    res.status(500).json({ message: "Error deleting employee", error: error.message });
   }
 });
+
 export default employeesRouter;

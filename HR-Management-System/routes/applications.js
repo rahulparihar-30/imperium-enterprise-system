@@ -1,6 +1,7 @@
 import express from "express";
 import Application from "../schemas/applicationSchema.js";
 import mongoose from "mongoose";
+import checkRole from "../../middleware/role.js";
 const appRouter = express.Router();
 
 const checkId = (id) => !mongoose.Types.ObjectId.isValid(id);
@@ -51,7 +52,7 @@ appRouter.get("/", async (req, res) => {
   }
 });
 
-appRouter.post("/", async (req, res) => {
+appRouter.post("/",checkRole(["Admin","HR"]), async (req, res) => {
   try {
     // Destructure fields from request body
     const {
@@ -179,7 +180,7 @@ appRouter.get("/filter", async (req, res) => {
     });
   }
 });
-appRouter.put("/status", async (req, res) => {
+appRouter.put("/status", checkRole(["Admin","HR"]),async (req, res) => {
   try {
     const { id, status, date } = req.query;
 
@@ -229,7 +230,7 @@ appRouter.put("/status", async (req, res) => {
     });
   }
 });
-appRouter.delete("/delete", async (req, res) => {
+appRouter.delete("/delete",checkRole(["Admin","HR"]), async (req, res) => {
   try {
     const { id } = req.query;
     if (checkId(id)) {

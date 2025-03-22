@@ -5,7 +5,8 @@ import employeesRouter from "./routes/employees.js";
 import attendanceRouter from "./routes/attendance.js";
 import scheduleRouter from "./routes/scheduling.js";
 import performanceRouter from "./routes/performance.js";
-
+import {authenticate} from "../middleware/auth.js";
+import checkRole from "../middleware/role.js";
 const HrManagementRouter = Router();
 
 HrManagementRouter.get("/",(req,res)=>{
@@ -15,10 +16,10 @@ HrManagementRouter.get("/",(req,res)=>{
 });
 HrManagementRouter.use("/application", appRouter);
 HrManagementRouter.use("/jobs", jobRouter);
-HrManagementRouter.use("/employees", employeesRouter);
-HrManagementRouter.use("/attendance", attendanceRouter);
-HrManagementRouter.use("/schedule", scheduleRouter);
-HrManagementRouter.use("/performance",performanceRouter);
+HrManagementRouter.use("/employees",authenticate,checkRole(["HR"]), employeesRouter);
+HrManagementRouter.use("/attendance", authenticate,checkRole(["HR"]),attendanceRouter);
+HrManagementRouter.use("/schedule",authenticate,checkRole(["HR"]), scheduleRouter);
+HrManagementRouter.use("/performance",authenticate,checkRole(["HR"]),performanceRouter);
 
 
 export default HrManagementRouter;

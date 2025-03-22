@@ -3,6 +3,7 @@ import { Project} from "../schemas/projectSchema.js";
 import mongoose from "mongoose";
 const projectRouter = Router();
 const checkId = (id) => !mongoose.Types.ObjectId.isValid(id);
+
 projectRouter.get("/", async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query; // Default to page 1 and limit 10

@@ -2,7 +2,9 @@ import express from "express";
 import mongoose from "mongoose";
 import Attendance from "../schemas/attendanceSchema.js";
 import Employee from "../schemas/emplyeeSchema.js";
+
 const attendanceRouter = express.Router();
+
 const checkId = (id) => !mongoose.Types.ObjectId.isValid(id);
 
 attendanceRouter.post("/mark", async (req, res) => {
@@ -46,7 +48,7 @@ attendanceRouter.post("/mark", async (req, res) => {
   }
 });
 
-attendanceRouter.get("/", async (req, res) => {
+attendanceRouter.get("/",async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
     const skip = (page - 1) * limit;
@@ -79,7 +81,7 @@ attendanceRouter.get("/", async (req, res) => {
   }
 });
 
-attendanceRouter.get("/attendance", async (req, res) => {
+attendanceRouter.get("/attendance",async (req, res) => {
   const { id } = req.query;
   if (checkId(id)) {
     return res.status(400).json({
@@ -107,7 +109,7 @@ attendanceRouter.get("/attendance", async (req, res) => {
   }
 });
 
-attendanceRouter.put("/update", async (req, res) => {
+attendanceRouter.put("/update",async (req, res) => {
   const { date } = req.query;
   const updatedData = req.body;
 

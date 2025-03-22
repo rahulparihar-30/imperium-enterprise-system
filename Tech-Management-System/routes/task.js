@@ -1,212 +1,82 @@
-import { Router } from "express";
-import mongoose from "mongoose";
+import express from "express";
 import { Task } from "../schemas/projectSchema.js";
-const taskRouter = Router();
+import checkRole from "../../middleware/role.js";
+const taskRouter = express.Router();
 const checkId = (id) => !mongoose.Types.ObjectId.isValid(id);
 
+// 🔹 Get All Tasks
 taskRouter.get("/", async (req, res) => {
   try {
-    const { page = 1, limit = 10 } = req.query; // Default to page 1 and limit 10
-    const skip = (page - 1) * limit;
+    const { page = 1, limit = 10, status, priority } = req.query;
+    const filter = {};
+    if (status) filter.status = status;
+    if (priority) filter.priority = priority;
 
-    const tasks = await Task.find().skip(Number(skip)).limit(Number(limit));
-    const totalTasks = await Task.countDocuments();
-    if (!tasks || tasks.length === 0) {
-      return res.status(404).json({ message: "No tasks Found" });
-    }
+    const tasks = await Task.find(filter)
+      .skip((page - 1) * limit)
+      .limit(Number(limit));
+    const totalTasks = await Task.countDocuments(filter);
+
     res.status(200).json({
       message: "Tasks fetched successfully.",
-      metadata: {
-        total: totalTasks,
-        page: Number(page),
-        limit: Number(limit),
-        totalPages: Math.ceil(totalTasks / limit),
-      },
+      metadata: { total: totalTasks, page: Number(page), limit: Number(limit) },
       tasks,
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        message: "An error occurred while fetching tasks.",
-        error: error.message,
-      });
+    res.status(500).json({ message: "Error fetching tasks", error: error.message });
   }
 });
 
-taskRouter.post("/", async (req, res) => {
+// 🔹 Create a Task (Only CTO & Managers)
+taskRouter.post("/", checkRole(["CTO", "Manager"]), async (req, res) => {
   try {
-    const { title, description, project, assignedTo, status } = req.body;
-
+    const { title, description, project, assignedTo, priority, deadline } = req.body;
     if (!title || !project || !assignedTo) {
-      return res
-        .status(400)
-        .json({
-          message: "Title, project, and assignedTo fields are required.",
-        });
+      return res.status(400).json({ message: "Title, project, and assignedTo fields are required." });
     }
-
-    const newTask = new Task({
-      title,
-      description,
-      project,
-      assignedTo,
-      status,
-    });
-    const savedTask = await newTask.save();
-    res
-      .status(201)
-      .json({ message: "Task created successfully.", task: savedTask });
+    const newTask = new Task({ title, description, project, assignedTo, priority, deadline });
+    await newTask.save();
+    res.status(201).json({ message: "Task created successfully.", task: newTask });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        message: "An error occurred while creating the task.",
-        error: error.message,
-      });
+    res.status(500).json({ message: "Error creating task", error: error.message });
   }
 });
 
-taskRouter.get("/task", async (req, res) => {
+// 🔹 Update Task (Only Managers & CTO)
+taskRouter.put("/task/:id", checkRole(["CTO", "Manager"]), async (req, res) => {
   try {
-    const { id } = req.query;
-
-    if (!id || checkId(id)) {
-      return res.status(400).json({ message: "A valid task ID is required." });
-    }
-
-    const task = await Task.findById(id);
-
-    if (!task) {
-      return res.status(404).json({ message: "Task not found." });
-    }
-
-    res.status(200).json({ message: "Task fetched successfully.", task });
+    const updatedTask = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!updatedTask) return res.status(404).json({ message: "Task not found." });
+    res.json({ message: "Task updated successfully", task: updatedTask });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        message: "An error occurred while fetching the task.",
-        error: error.message,
-      });
+    res.status(500).json({ message: "Error updating task", error: error.message });
   }
 });
 
-taskRouter.put("/task", async (req, res) => {
+// 🔹 Archive Task Instead of Deleting
+taskRouter.delete("/task/:id", checkRole(["CTO"]), async (req, res) => {
   try {
-    const { id, title, description, project, assignedTo, status } = req.body;
-
-    if (!id || checkId(id)) {
-      return res.status(400).json({ message: "A valid task ID is required." });
-    }
-
-    const updatedFields = {};
-    if (title) updatedFields.title = title;
-    if (description) updatedFields.description = description;
-    if (project) updatedFields.project = project;
-    if (assignedTo) updatedFields.assignedTo = assignedTo;
-    if (status) updatedFields.status = status;
-
-    const updatedTask = await Task.findByIdAndUpdate(id, updatedFields, {
-      new: true,
-    });
-
-    if (!updatedTask) {
-      return res.status(404).json({ message: "Task not found." });
-    }
-
-    res
-      .status(200)
-      .json({ message: "Task updated successfully.", task: updatedTask });
+    await Task.findByIdAndUpdate(req.params.id, { status: "Archived" });
+    res.json({ message: "Task archived successfully" });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        message: "An error occurred while updating the task.",
-        error: error.message,
-      });
+    res.status(500).json({ message: "Error archiving task", error: error.message });
   }
 });
 
-taskRouter.delete("/task", async (req, res) => {
+// 🔹 Approve Task (Only CTO)
+taskRouter.put("/task/:id/approve", checkRole(["CTO"]), async (req, res) => {
   try {
-    const { id } = req.query;
-
-    if (!id || checkId(id)) {
-      return res.status(400).json({ message: "A valid task ID is required." });
-    }
-
-    const deletedTask = await Task.findByIdAndDelete(id);
-
-    if (!deletedTask) {
-      return res.status(404).json({ message: "Task not found." });
-    }
-
-    res
-      .status(200)
-      .json({ message: "Task deleted successfully.", task: deletedTask });
-  } catch (error) {
-    res
-      .status(500)
-      .json({
-        message: "An error occurred while deleting the task.",
-        error: error.message,
-      });
-  }
-});
-
-taskRouter.put("/task/approve", async (req, res) => {
-  try {
-    const {id} = req.query;
     const { approvedBy } = req.body;
-
-    // Check if the user exists and is a CTO
-    const user = await Employee.findById(approvedBy);
-    if (!user || user.role !== "CTO") {
-      return res.status(403).json({ message: "Only CTO can approve tasks" });
-    }
-
-    const updatedTask = await Task.findByIdAndUpdate(
-      id,
-      {
-        "approval.approved": true,
-        "approval.approvedBy": approvedBy,
-        "approval.approvedAt": new Date(),
-      },
-      { new: true }
-    );
-
-    if (!updatedTask)
-      return res.status(404).json({ message: "Task not found" });
-
+    const updatedTask = await Task.findByIdAndUpdate(req.params.id, {
+      "approval.approved": true,
+      "approval.approvedBy": approvedBy,
+      "approval.approvedAt": new Date(),
+    }, { new: true });
+    if (!updatedTask) return res.status(404).json({ message: "Task not found" });
     res.json({ message: "Task approved successfully", task: updatedTask });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: "Error approving task", error: error.message });
   }
 });
 
-taskRouter.patch("/task",async (req,res) => {
-  try{
-    const {update,updatedBy} = req.body;
-    const id = req.body.id
-    if (!id || checkId(id)) return res.status(400).json({ message: "A valid task ID is required." });
-    if(!update && !updatedBy) return res.status(400).json({message:"All the fields are must."})
-    const task = await Task.findById(id)
-    if(!task) return res.status(404).json({message:"No Task found!"});
-    const updateData = {
-      update,
-      updatedBy
-    }
-    task.progressUpdates.push(updateData);
-    await task.save()
-    res.status(200).json({ message: "Progress update added successfully.", task });
-    }catch{
-      res
-      .status(500)
-      .json({
-        message: "An error occurred while updating the task.",
-        error: error.message,
-      });
-    }
-})
 export default taskRouter;

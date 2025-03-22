@@ -2,6 +2,8 @@ import express from "express";
 import mongoose from "mongoose";
 import Performance from "../schemas/performanceSchema.js";
 import Employee from "../schemas/emplyeeSchema.js";
+import {authenticate} from "../../middleware/auth.js";
+import checkRole from "../../middleware/role.js";
 
 const performanceRouter = express.Router();
 const checkId = (id) => !mongoose.Types.ObjectId.isValid(id);

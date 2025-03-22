@@ -1,6 +1,8 @@
 import express from 'express';
 import Job from '../schemas/jobSchema.js';
 import mongoose from "mongoose";
+import checkRole from  "../../middleware/role.js";
+import {authenticate} from "../../middleware/auth.js";
 const jobRouter = express.Router();
 const checkId = (id) => !mongoose.Types.ObjectId.isValid(id);
 
@@ -34,7 +36,7 @@ jobRouter.get("/", async (req, res) => {
   }
 });
 
-jobRouter.post("/new", async (req, res) => {
+jobRouter.post("/new",authenticate,checkRole(["HR"]), async (req, res) => {
   try {
     const {
       jobTitle,
@@ -110,7 +112,7 @@ jobRouter.get("/job/:id", async (req, res) => {
     });
   }
 });
-jobRouter.put("/edit/:id", async (req, res) => {
+jobRouter.put("/edit/:id",authenticate,checkRole(["HR"]), async (req, res) => {
   const { id } = req.params;
   const updatedData = req.body;
 
@@ -142,7 +144,7 @@ jobRouter.put("/edit/:id", async (req, res) => {
     });
   }
 });
-jobRouter.delete("/delete", async (req, res) => {
+jobRouter.delete("/delete",authenticate,checkRole(["HR"]), async (req, res) => {
   const { id } = req.query;
   try {
     if (checkId(id)) {

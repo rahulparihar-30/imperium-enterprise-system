@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import bcrypt from "bcryptjs";  
 const employeeSchema = new mongoose.Schema(
   {
     // Personal Information
@@ -6,45 +7,66 @@ const employeeSchema = new mongoose.Schema(
       firstName: { type: String, required: true },
       lastName: { type: String, required: true },
     },
-    dateOfBirth: { type: Date, required: true },
-    gender: { type: String, enum: ["Male", "Female", "Other"], required: true },
-    contactNumber: { type: String, required: true },
-    personalEmail: { type: String, required: true, unique: true },
+    dateOfBirth: { type: Date, required: false },
+    gender: { type: String, enum: ["Male", "Female", "Other"], required: false },
+    contactNumber: { type: String, required: false },
     address: {
-      current: { type: String, required: true },
+      current: { type: String, required: false },
       permanent: { type: String },
     },
     emergencyContact: {
-      name: { type: String, required: true },
-      relationship: { type: String, required: true },
-      phone: { type: String, required: true },
+      name: { type: String, required: false },
+      relationship: { type: String, required: false },
+      phone: { type: String, required: false },
+    },
+
+    // Authentication & Role-Based Access Control (RBAC)
+    role: {
+      type: String,
+      enum: [
+        "CEO", "CTO", "CFO", "CMO", "COO", "CHRO", // Leadership
+        "Manager", "Team Lead", "Employee", "Intern", // Managers & Team Members
+      ],
+      required: true,
+      default: "Employee",
+    },
+
+    permissions: {
+      strategyDefinition: { type: Boolean, default: false }, // Leadership
+      decisionMaking: { type: Boolean, default: false }, // Leadership
+      performanceMonitoring: { type: Boolean, default: false }, // Leadership
+      taskAssignment: { type: Boolean, default: false }, // Managers
+      deadlineTracking: { type: Boolean, default: false }, // Managers
+      teamFeedback: { type: Boolean, default: false }, // Managers
+      taskUpdates: { type: Boolean, default: false }, // Team Members
+      progressSharing: { type: Boolean, default: false }, // Team Members
+      collaboration: { type: Boolean, default: false }, // Team Members
     },
 
     // Professional Information
-    jobTitle: { type: String, required: true },
-    department: { type: String, required: true },
-    reportingManager: { type: String, required: true },
+    jobTitle: { type: String, required: false },
+    department: { type: String, required: false },
+    reportingManager: { type: String, required: false },
     employmentType: {
       type: String,
       enum: ["Full-Time", "Part-Time", "Contract", "Intern"],
-      required: true,
+      required: false,
     },
-    dateOfJoining: { type: Date, required: true },
-    employeeID: { type: String, required: true, unique: true },
-    workLocation: { type: String, required: true },
+    dateOfJoining: { type: Date, required: false },
+    // employeeID: { type: String, required: false, unique: false },
+    workLocation: { type: String, required: false },
     dateOfExit: { type: Date },
 
+    // Payroll (Only Leadership & HR can access)
+    payrolls: [{ type: mongoose.Schema.Types.ObjectId, ref: "Payroll" }],
+
     // Compensation and Benefits
-    salaryDetails: {
-      baseSalary: { type: Number, required: true },
-      bonuses: { type: Number, default: 0 },
-      allowances: { type: Number, default: 0 },
-      deductions: { type: Number, default: 0 },
-    },
     benefits: {
       healthInsurance: { type: String },
       providentFund: { type: String },
     },
+    email: { type: String, required: true, unique: true },  // 🔹 Used for authentication
+  password: { type: String, required: true },  // 🔹 Securely hashed password
     taxDetails: {
       pan: { type: String },
       tin: { type: String },
@@ -58,8 +80,8 @@ const employeeSchema = new mongoose.Schema(
     // Performance and Skills
     appraisals: [
       {
-        date: { type: Date, required: true },
-        review: { type: String, required: true },
+        date: { type: Date, required: false },
+        review: { type: String, required: false },
         rating: { type: Number, min: 1, max: 5 },
       },
     ],
@@ -71,9 +93,13 @@ const employeeSchema = new mongoose.Schema(
         completionDate: { type: Date },
       },
     ],
+    resetToken: { type: String },
+resetTokenExpires: { type: Date },
+
 
     // Attendance and Leave
-    attendance: [{ type: mongoose.Schema.Types.ObjectId, ref: "Attendance"}],
+    attendance: [{ type: mongoose.Schema.Types.ObjectId, ref: "Attendance" }],
+
     // HR Notes and Compliance
     employeeStatus: {
       type: String,
@@ -90,21 +116,27 @@ const employeeSchema = new mongoose.Schema(
     contractDetails: { type: String },
     visaOrWorkPermit: { type: String },
     backgroundVerification: { type: Boolean, default: false },
-    performance:[{
-      type: mongoose.Schema.Types.ObjectId,ref:"Performance"
-    }],
+    performance: [{ type: mongoose.Schema.Types.ObjectId, ref: "Performance" }],
+
     // Document Management
     officialEmail: { type: String },
     documents: [
       {
-        documentType: { type: String, required: true },
-        filePath: { type: String, required: true },
+        documentType: { type: String, required: false },
+        filePath: { type: String, required: false },
       },
     ],
     employeePhoto: { type: String },
   },
   { timestamps: true } // Automatically adds createdAt and updatedAt
+
 );
+
+employeeSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
+});
 
 const Employee = mongoose.model("Employee", employeeSchema);
 
