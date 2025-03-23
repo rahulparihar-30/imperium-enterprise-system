@@ -1,12 +1,10 @@
 import { Router } from "express";
-import Client from "../schemas/clientSchema.js";
-import mongoose from "mongoose";
 import checkRole from "../../middleware/role.js"; // Role-based access control middleware
 import multer from "multer";
 import path from "path";
+import { deleteClient, getClient, getClients, newClient, updateClient } from "../controllers/clientContoller.js";
 
 const clientRouter = Router();
-const checkId = (id) => !mongoose.Types.ObjectId.isValid(id);
 
 // Configure Multer for file uploads
 const storage = multer.diskStorage({
@@ -19,102 +17,12 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage });
+clientRouter.get("/", getClients);
 
-clientRouter.get("/", async (req, res) => {
-  const { page = 1, limit = 10, search = "", contractStatus, salesRep } = req.query;
-  try {
-    const searchQuery = search
-      ? {
-          $or: [
-            { name: new RegExp(search, "i") },
-            { email: new RegExp(search, "i") },
-            { company: new RegExp(search, "i") },
-          ],
-        }
-      : {};
-    
-    if (contractStatus) searchQuery["contracts.status"] = contractStatus;
-    if (salesRep) searchQuery.salesRep = salesRep;
+clientRouter.post("/", checkRole(["Admin", "Sales"]), upload.single("agreementFile"), newClient);
 
-    const clients = await Client.find(searchQuery)
-      .skip((page - 1) * limit)
-      .limit(parseInt(limit))
-      .lean();
-
-    const totalClients = await Client.countDocuments(searchQuery);
-
-    res.status(200).json({
-      message: "Clients fetched successfully.",
-      clients,
-      totalPages: Math.ceil(totalClients / limit),
-      currentPage: parseInt(page),
-    });
-  } catch (error) {
-    console.error("Error while searching clients:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-});
-
-clientRouter.post("/", checkRole(["Admin", "Sales"]), upload.single("agreementFile"), async (req, res) => {
-  const { name, email, phone, company, salesRep, contracts } = req.body;
-  const agreementFile = req.file ? req.file.path : null;
-  
-  if (!name || !email || !phone || !company || !salesRep) {
-    return res.status(400).json({ message: "All fields are required" });
-  }
-  try {
-    const existingClient = await Client.findOne({ email });
-    if (existingClient) {
-      return res.status(400).json({ message: "Client already exists" });
-    }
-    const client = new Client({ name, email, phone, company, salesRep, contracts, agreementFile });
-    const newClient = await client.save();
-    res.status(201).json(newClient);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-});
-
-clientRouter.put("/client", checkRole(["Admin", "Sales"]), upload.single("agreementFile"), async (req, res) => {
-  const { id } = req.query;
-  const agreementFile = req.file ? req.file.path : undefined;
-  
-  if (checkId(id)) return res.status(400).json({ message: "Invalid client id" });
-  try {
-    const updatedData = agreementFile ? { ...req.body, agreementFile } : req.body;
-    const client = await Client.findByIdAndUpdate(id, updatedData, { new: true });
-    if (!client) return res.status(404).json({ message: "Client not found" });
-    res.json(client);
-  } catch (error) {
-    res.status(500).json({ message: "Internal server error" });
-  }
-});
-clientRouter.get("/client", async (req, res) => {
-  const { id } = req.query;
-  if (checkId(id)) return res.status(400).json({ message: "Invalid client id" });
-  try {
-    const client = await Client
-      .findById(id)
-      .populate("salesRep", "name")
-      .lean();
-    if (!client) return res.status(404).json({ message: "Client not found" });
-    res.json(client);
-  } catch (error) {
-    res.status(500).json({ message: "Internal server error" });
-  }
-}
-);
-clientRouter.delete("/client", checkRole(["Admin", "Sales"]), async (req, res) => {
-  const { id } = req.query;
-  if (checkId(id)) return res.status(400).json({ message: "Invalid client id" });
-  try {
-    const client = await Client.findByIdAndDelete(id);
-    if (!client) return res.status(404).json({ message: "Client not found" });
-    res.json({ message: "Client deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ message: "Internal server error" });
-  }
-}
-);
+clientRouter.put("/client", checkRole(["Admin", "Sales"]), upload.single("agreementFile"), updateClient);
+clientRouter.get("/client", getClient);
+clientRouter.delete("/client", checkRole(["Admin", "Sales"]),deleteClient);
 
 export default clientRouter;
