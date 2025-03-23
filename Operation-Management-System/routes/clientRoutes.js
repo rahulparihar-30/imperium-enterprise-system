@@ -75,8 +75,8 @@ clientRouter.post("/", checkRole(["Admin", "Sales"]), upload.single("agreementFi
   }
 });
 
-clientRouter.put("/client/:id", checkRole(["Admin", "Sales"]), upload.single("agreementFile"), async (req, res) => {
-  const { id } = req.params;
+clientRouter.put("/client", checkRole(["Admin", "Sales"]), upload.single("agreementFile"), async (req, res) => {
+  const { id } = req.query;
   const agreementFile = req.file ? req.file.path : undefined;
   
   if (checkId(id)) return res.status(400).json({ message: "Invalid client id" });
@@ -89,5 +89,32 @@ clientRouter.put("/client/:id", checkRole(["Admin", "Sales"]), upload.single("ag
     res.status(500).json({ message: "Internal server error" });
   }
 });
+clientRouter.get("/client", async (req, res) => {
+  const { id } = req.query;
+  if (checkId(id)) return res.status(400).json({ message: "Invalid client id" });
+  try {
+    const client = await Client
+      .findById(id)
+      .populate("salesRep", "name")
+      .lean();
+    if (!client) return res.status(404).json({ message: "Client not found" });
+    res.json(client);
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" });
+  }
+}
+);
+clientRouter.delete("/client", checkRole(["Admin", "Sales"]), async (req, res) => {
+  const { id } = req.query;
+  if (checkId(id)) return res.status(400).json({ message: "Invalid client id" });
+  try {
+    const client = await Client.findByIdAndDelete(id);
+    if (!client) return res.status(404).json({ message: "Client not found" });
+    res.json({ message: "Client deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" });
+  }
+}
+);
 
 export default clientRouter;

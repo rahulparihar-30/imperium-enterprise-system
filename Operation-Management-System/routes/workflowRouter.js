@@ -10,7 +10,7 @@ const checkId = (id) => !mongoose.Types.ObjectId.isValid(id);
 async function getWorkflow(req, res, next) {
   let workflow;
   try {
-    workflow = await Workflow.findById(req.params.id);
+    workflow = await Workflow.findById(req.query.id);
     if (!workflow) {
       return res.status(404).json({ message: "Workflow not found" });
     }
@@ -20,7 +20,7 @@ async function getWorkflow(req, res, next) {
   res.workflow = workflow;
   next();
 }
-
+ 
 // Get all workflows
 workflowRouter.get("/", async (req, res) => {
   try {
@@ -48,12 +48,12 @@ workflowRouter.post("/", async (req, res) => {
 });
 
 // Get a workflow by ID
-workflowRouter.get("/:id", getWorkflow, (req, res) => {
+workflowRouter.get("/", getWorkflow, (req, res) => {
   res.json(res.workflow);
 });
 
 // Update a workflow
-workflowRouter.put("/:id", getWorkflow, async (req, res) => {
+workflowRouter.put("/", getWorkflow, async (req, res) => {
   if (req.body.name) res.workflow.name = req.body.name;
   if (req.body.departmentId) res.workflow.departmentId = req.body.departmentId;
   if (req.body.status) res.workflow.status = req.body.status;
@@ -68,9 +68,9 @@ workflowRouter.put("/:id", getWorkflow, async (req, res) => {
 });
 
 // Delete (soft delete) a workflow
-workflowRouter.delete("/:id", getWorkflow, async (req, res) => {
+workflowRouter.delete("/", getWorkflow, async (req, res) => {
   try {
-    await Workflow.findByIdAndUpdate(req.params.id, { status: "Deleted" });
+    await Workflow.findByIdAndUpdate(req.query.id, { status: "Deleted" });
     res.json({ message: "Workflow deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });

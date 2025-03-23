@@ -3,7 +3,7 @@ import Workflow from "../schemas/workflowSchema.js";
 
 const reportRouter = express.Router();
 
-reportRouter.get("/productivity", async (req, res) => {
+reportRouter.get("/", async (req, res) => {
   try {
     // Aggregate completed vs total tasks
     const workflows = await Workflow.find().lean();
@@ -21,7 +21,7 @@ reportRouter.get("/productivity", async (req, res) => {
         totalCompletedWorkflows++;
       }
     });
-
+ 
     const taskCompletionRate = totalAssignedTasks > 0
       ? ((totalCompletedTasks / totalAssignedTasks) * 100).toFixed(2)
       : 0;
