@@ -6,8 +6,7 @@ const checkId = (id) => !mongoose.Types.ObjectId.isValid(id);
 export const newEmployee = async (req, res) => {
   try {
     const {
-      firstName,
-      lastName,
+      fullName: { firstName, lastName },
       dateOfBirth,
       gender,
       contactNumber,
@@ -38,14 +37,14 @@ export const newEmployee = async (req, res) => {
       contractDetails,
       visaOrWorkPermit,
       backgroundVerification,
-      officialEmail,
+      email,
       documents,
       employeePhoto,
       role,
+      password,
       payrollRecords, // Payroll IDs
       performanceRecords, // Performance Tracking IDs
     } = req.body;
-
     const newEmployee = new Employee({
       fullName: { firstName, lastName },
       dateOfBirth,
@@ -79,12 +78,13 @@ export const newEmployee = async (req, res) => {
       contractDetails,
       visaOrWorkPermit,
       backgroundVerification,
-      officialEmail,
+      email,
       documents,
       employeePhoto,
       role,
       payrollRecords,
       performanceRecords,
+      password
     });
 
     await newEmployee.save();

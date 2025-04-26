@@ -25,7 +25,7 @@ const employeeSchema = new mongoose.Schema(
       type: String,
       enum: [
         "CEO", "CTO", "CFO", "CMO", "COO", "CHRO", // Leadership
-        "Manager", "Team Lead", "Employee", "Intern", // Managers & Team Members
+        "Manager", "Team Lead", "Employee", "Intern","HR" // Managers & Team Members
       ],
       required: true,
       default: "Employee",
