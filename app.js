@@ -1,6 +1,7 @@
 import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
+import cors from "cors";
 
 import HrManagementRouter from "./HR-Management-System/HrManagement.js"
 import TechManagementRouter from "./Tech-Management-System/TechManagementSystem.js";
@@ -11,9 +12,12 @@ import checkRole from "./middleware/role.js";
 import oms from "./Operation-Management-System/oms.js";
 import authRouter from "./Authentication/routes/authRouter.js";
 import { authenticate } from "./middleware/auth.js";
+
+
 dotenv.config();
 const app = express();
 const PORT = 3000;
+app.use(cors());
 app.use(express.json());
 
 const dbURI = process.env.DATABASE_URI;
