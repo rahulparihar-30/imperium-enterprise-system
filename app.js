@@ -37,7 +37,7 @@ app.use("/hr",HrManagementRouter);
 app.use("/tech",authenticate,checkRole(["HR"]),TechManagementRouter);
 app.use("/marketing",campaignRouter);
 app.use("/payroll",authenticate,checkRole(["HR"]),payroll)
-app.use("/operation-management",authenticate,checkRole(["HR"]),oms)
+app.use("/operation-management",authenticate,checkRole(["HR","Team Lead"]),oms)
 app.listen(PORT, () => {
   console.log(
     "Imperium Enterprise System Started Successfully and listening on port " +
